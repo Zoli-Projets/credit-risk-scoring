@@ -1,2 +1,11 @@
-# credit-risk-scoring
-End-to-End Credit Risk Scoring Pipeline using Machine Learning and XGBoost
+import logging
+
+logging.basicConfig(
+
+    level=logging.INFO,
+
+    format="%(asctime)s - %(levelname)s - %(message)s"
+
+)
+
+logger = logging.getLogger(__name__)

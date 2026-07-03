@@ -1,0 +1,45 @@
+# Configuration du projet
+seed: 42
+test_size: 0.2
+target: default
+random_state: 42
+
+# Paramètres XGBoost
+xgboost:
+  n_estimators: 300
+  learning_rate: 0.05
+  max_depth: 6
+  subsample: 0.8
+  colsample_bytree: 0.8
+  min_child_weight: 1
+  gamma: 0
+  reg_alpha: 0
+  reg_lambda: 1
+  scale_pos_weight: 1
+
+# Cross-validation
+cv:
+  folds: 5
+  scoring: roc_auc
+  shuffle: true
+
+# Optuna hyperparameter optimization
+optuna:
+  n_trials: 50
+  timeout: 600  # secondes
+  direction: maximize
+
+# SMOTE
+smote:
+  sampling_strategy: auto
+  random_state: 42
+
+# Feature selection
+feature_selection:
+  n_features: null  # null = garder toutes les features
+  threshold: 0.01   # importance minimale
+
+# Logging
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
