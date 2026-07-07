@@ -1,0 +1,3 @@
+[console_scripts]
+evaluate-model = credit_risk_scoring.scripts.evaluate_model:main
+run-pipeline = credit_risk_scoring.scripts.run_pipeline:main

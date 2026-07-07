@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "credit-risk-scoring"
+version = "0.1.0"
+description = "Credit Risk Scoring - Modélisation du Risque de Crédit"
+readme = "README.md"
+authors = [
+    {name = "Zolifaga Samuel Yeo"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "xgboost>=2.0.0",
+    "imbalanced-learn>=0.10.0",
+    "optuna>=3.0.0",
+    "statsmodels>=0.14.0",
+    "joblib>=1.3.0",
+    "seaborn>=0.12.0",
+    "matplotlib>=3.7.0",
+    "scipy>=1.10.0"
+]
+
+[project.scripts]
+run-pipeline = "credit_risk_scoring.scripts.run_pipeline:main"
+evaluate-model = "credit_risk_scoring.scripts.evaluate_model:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["credit_risk_scoring*"]
