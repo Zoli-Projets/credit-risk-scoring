@@ -14,8 +14,8 @@ env/
 *.pkl
 
 # Fichiers de notebook
-.ipynb_checkpoints/
-*.ipynb
+# .ipynb_checkpoints/
+# *.ipynb
 
 # Fichiers système
 .DS_Store
