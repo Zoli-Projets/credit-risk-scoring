@@ -18,21 +18,26 @@ The project follows a complete machine learning workflow, including:
 
 ```text
 credit-risk-scoring/
-├──config
-│  └── config.yaml
+├── config/
+│   └── config.yaml
 │
-├── requirements.txt
-│
-│── data/
-│    ├── loans.csv
-│    ├── customers.csv
-│    └── bureau.csv
+├── data/
+│   ├── loans.csv
+│   ├── customers.csv
+│   └── bureau_data.csv
 │
 ├── reports/
+│   ├── figures/
+│   │   ├── roc_curve.png
+│   │   ├── feature_importance.png
+│   │   ├── confusion_matrix.png
+│   │   ├── correlation_matrix.png
+│   │   ├── precision_recall.png
+│   │   └── ks_statistic.png
 │   └── Rapport_projet.pdf
 │
 ├── notebooks/
-│   └── notebook.ipynb
+│   └── 01_Exploratory_Data_Analysis.ipynb
 │
 ├── scripts/
 │   ├── run_pipeline.py
@@ -41,6 +46,7 @@ credit-risk-scoring/
 ├── src/
 │   └── credit_risk_scoring/
 │       ├── __init__.py
+│       ├── config.py
 │       ├── data/
 │       │   ├── __init__.py
 │       │   ├── load_data.py
@@ -54,8 +60,9 @@ credit-risk-scoring/
 │
 ├── .gitignore
 ├── pyproject.toml
-├── README.md
-└── setup.py    
+├── setup.py
+├── requirements.txt
+└── README.md
 ```
 
 ---

@@ -1,10 +1,103 @@
-# Configuration du projet
-seed: 42
-test_size: 0.2
-target: default
-random_state: 42
+# Credit Risk Scoring - Configuration du projet
+# ==============================================
 
-# Paramètres XGBoost
+# Paramètres généraux
+seed: 42
+random_state: 42
+target: default
+test_size: 0.25
+
+# Chemins des données
+data:
+  path: "data/"
+  loans: "loans.csv"
+  customers: "customers.csv"
+  bureau: "bureau_data.csv"
+
+# Conversion monétaire
+currency:
+  conversion_rate: 0.011
+
+# Feature Engineering
+features:
+  cols_to_drop:
+    - cust_id
+    - loan_id
+    - disbursal_date
+    - installment_start_dt
+    - zipcode
+    - city
+    - state
+  cols_to_drop_fe:
+    - loan_amount
+    - income
+    - total_loan_months
+    - delinquent_months
+    - total_dpd
+  cols_to_drop_vif:
+    - processing_fee
+    - gst
+    - net_disbursement
+    - sanction_amount
+    - principal_outstanding
+
+# Sélection des variables par Information Value (IV)
+feature_selection:
+  iv_threshold: 0.02
+  selected_features:
+    - age
+    - loan_tenure_months
+    - number_of_open_accounts
+    - credit_utilization_ratio
+    - residence_type_Owned
+    - residence_type_Rented
+    - loan_purpose_Home
+    - loan_purpose_Personal
+    - loan_type_Unsecured
+    - loan_to_income
+    - delinquency_ratio
+    - avg_dpd_per_delinquency
+
+# Colonnes à scaler
+scaling:
+  cols_to_scale:
+    - age
+    - number_of_dependants
+    - years_at_current_address
+    - loan_tenure_months
+    - bank_balance_at_application
+    - number_of_open_accounts
+    - number_of_closed_accounts
+    - enquiry_count
+    - credit_utilization_ratio
+    - loan_to_income
+    - delinquency_ratio
+    - avg_dpd_per_delinquency
+
+# Régression Logistique - RandomizedSearchCV
+logistic_regression:
+  max_iter: 10000
+  param_dist:
+    C:
+      - 0.0001
+      - 0.001
+      - 0.01
+      - 0.1
+      - 1
+      - 10
+      - 100
+      - 1000
+      - 10000
+    solver:
+      - lbfgs
+      - saga
+      - liblinear
+      - newton-cg
+  n_iter: 50
+  cv: 3
+  scoring: f1
+
+# XGBoost - RandomizedSearchCV
 xgboost:
   n_estimators: 300
   learning_rate: 0.05
@@ -16,17 +109,67 @@ xgboost:
   reg_alpha: 0
   reg_lambda: 1
   scale_pos_weight: 1
-
-# Cross-validation
-cv:
-  folds: 5
-  scoring: roc_auc
-  shuffle: true
+  eval_metric: logloss
+  random_state: 42
+  param_dist:
+    n_estimators:
+      - 100
+      - 150
+      - 200
+      - 250
+      - 300
+    max_depth:
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+    learning_rate:
+      - 0.01
+      - 0.03
+      - 0.05
+      - 0.1
+      - 0.15
+      - 0.2
+      - 0.25
+      - 0.3
+    subsample:
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+    colsample_bytree:
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+    reg_alpha:
+      - 0.01
+      - 0.1
+      - 0.5
+      - 1.0
+      - 5.0
+      - 10.0
+    reg_lambda:
+      - 0.01
+      - 0.1
+      - 0.5
+      - 1.0
+      - 5.0
+      - 10.0
+  n_iter: 100
+  cv: 3
+  scoring: f1
 
 # Optuna hyperparameter optimization
 optuna:
   n_trials: 50
-  timeout: 600  # secondes
+  timeout: 600
   direction: maximize
 
 # SMOTE
@@ -34,10 +177,19 @@ smote:
   sampling_strategy: auto
   random_state: 42
 
-# Feature selection
-feature_selection:
-  n_features: null  # null = garder toutes les features
-  threshold: 0.01   # importance minimale
+# Under-sampling
+under_sampling:
+  random_state: 42
+
+# Cross-validation
+cv:
+  folds: 5
+  scoring: roc_auc
+  shuffle: true
+
+# Sauvegarde du modèle
+model_save:
+  path: "model_data.joblib"
 
 # Logging
 logging:
