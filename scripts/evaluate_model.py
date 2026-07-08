@@ -4,7 +4,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import classification_report, roc_curve, auc
+from sklearn.metrics import (
+    classification_report, roc_curve, auc,
+    confusion_matrix, ConfusionMatrixDisplay,
+    precision_recall_curve, average_precision_score
+)
 from joblib import load
 
 # Ajouter le chemin parent pour importer les modules src
@@ -17,11 +21,23 @@ from src.data.preprocess import (
     feature_engineering, prepare_for_modeling
 )
 
+# Créer le dossier pour les figures
+FIGURES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports', 'figures')
+os.makedirs(FIGURES_DIR, exist_ok=True)
+
+
+def save_figure(filename):
+    """Sauvegarde la figure dans le dossier reports/figures/"""
+    path = os.path.join(FIGURES_DIR, filename)
+    plt.savefig(path, dpi=300, bbox_inches='tight')
+    print(f"  ✅ Figure sauvegardée : {path}")
+
+
 print("=" * 60)
 print("CREDIT RISK SCORING - ÉVALUATION DU MODÈLE")
 print("=" * 60)
 
-# 1. Chargement et préparation des données (identique au pipeline)
+# 1. Chargement et préparation des données
 print("\n1. Chargement et préparation des données...")
 loans, customers, bureau = load_all_data()
 customers, loans = convert_currency(customers, loans)
@@ -41,26 +57,46 @@ features = artifacts['features']
 scaler = artifacts['scaler']
 cols_to_scale = artifacts['cols_to_scale']
 
-# 3. Préparation des données de test avec le bon scaler
+# 3. Préparation des données de test
 print("\n3. Préparation des données de test...")
 X_test_final = X_test[features].copy()
 X_test_final[cols_to_scale] = scaler.transform(X_test_final[cols_to_scale])
 
-# 4. Prédiction et classification report
-print("\n4. Évaluation du modèle...")
+# 4. Prédictions
 y_pred = model.predict(X_test_final)
+y_prob = model.predict_proba(X_test_final)[:, 1]
+
+# ============================================================
+# 5. Classification Report  
+# ============================================================
 print("\n--- Classification Report ---")
 print(classification_report(y_test, y_pred))
 
-# 5. ROC Curve et AUC
-print("\n5. Calcul de la courbe ROC et AUC...")
-probabilities = model.predict_proba(X_test_final)[:, 1]
-fpr, tpr, thresholds = roc_curve(y_test, probabilities)
+# ============================================================
+# 6. Matrice de confusion  
+# ============================================================
+print("\n6. Matrice de confusion...")
+
+cm = confusion_matrix(y_test, y_pred)
+fig, ax = plt.subplots(figsize=(8, 6))
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Non-Défaut', 'Défaut'])
+disp.plot(ax=ax, cmap='Blues', values_format='d')
+plt.title('Matrice de confusion — Régression Logistique + RandomizedSearchCV')
+plt.tight_layout()
+save_figure('confusion_matrix.png')
+plt.show()
+
+# ============================================================
+# 7. ROC Curve et AUC  
+# ============================================================
+print("\n7. Courbe ROC et AUC...")
+
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
 area = auc(fpr, tpr)
 print(f"AUC : {area:.4f}")
 
 plt.figure(figsize=(8, 6))
-plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'Courbe ROC (AUC = {area:.2f})')
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'Courbe ROC (AUC = {area:.4f})')
 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Modèle aléatoire (AUC = 0.50)')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
@@ -69,25 +105,30 @@ plt.ylabel('Taux de vrais positifs (TPR)')
 plt.title('Courbe ROC — Régression Logistique + RandomizedSearchCV')
 plt.legend(loc='lower right')
 plt.tight_layout()
-plt.savefig('roc_curve.png')
+save_figure('roc_curve.png')
 plt.show()
 
-# 6. Coefficient de Gini
-print("\n6. Calcul du Coefficient de Gini...")
+# ============================================================
+# 8. Coefficient de Gini  
+# ============================================================
+print("\n8. Coefficient de Gini...")
 gini_coefficient = 2 * area - 1
+print(f"AUC              : {area:.4f}")
 print(f"Gini Coefficient : {gini_coefficient:.4f}")
-print("Interprétation :")
+print("\nInterprétation :")
 print("- < 0.20 : modèle faible")
 print("- 0.20–0.40 : modèle acceptable")
 print("- 0.40–0.60 : bon modèle")
 print("- > 0.60 : excellent modèle")
 
-# 7. Rank Ordering et KS Statistic
-print("\n7. Rank Ordering et KS Statistic...")
+# ============================================================
+# 9. Rank Ordering et KS Statistic  
+# ============================================================
+print("\n9. Rank Ordering et KS Statistic...")
 
 decile_df = pd.DataFrame({
     'y_test': y_test.values,
-    'probability': probabilities
+    'probability': y_prob
 })
 
 decile_df['decile'] = pd.qcut(
@@ -122,7 +163,7 @@ print("- 0.20 – 0.40 : modèle acceptable")
 print("- 0.40 – 0.60 : bon modèle")
 print("- > 0.60 : excellent modèle")
 
-# Visualisation KS
+# Visualisation KS  
 plt.figure(figsize=(10, 5))
 plt.plot(rank_order['decile'], rank_order['cum_event_pct'],
          marker='o', label='Événements cumulés (défauts)', color='red')
@@ -137,11 +178,41 @@ plt.ylabel('Taux cumulé')
 plt.title('KS Statistic — Rank Ordering')
 plt.legend()
 plt.tight_layout()
-plt.savefig('ks_statistic.png')
+save_figure('ks_statistic.png')
 plt.show()
 
-# 8. Importance des variables
-print("\n8. Importance des variables...")
+# ============================================================
+# 10. Matrice de corrélation  
+# ============================================================
+print("\n10. Matrice de corrélation...")
+
+# Colonnes utilisées dans la heatmap du notebook
+cols_for_heatmap = [
+    'age', 'number_of_dependants', 'years_at_current_address',
+    'loan_tenure_months', 'bank_balance_at_application',
+    'number_of_open_accounts', 'number_of_closed_accounts', 'enquiry_count',
+    'credit_utilization_ratio', 'loan_to_income', 'delinquency_ratio',
+    'avg_dpd_per_delinquency', 'default'
+]
+
+# Filtrer les colonnes disponibles
+available_cols = [col for col in cols_for_heatmap if col in df_train_2.columns]
+
+plt.figure(figsize=(12, 12))
+cm = df_train_2[available_cols].corr()
+sns.heatmap(cm, annot=True, fmt='.2f', cmap='coolwarm', center=0)
+plt.xticks(rotation=45, ha='right')
+plt.yticks(rotation=0)
+plt.title('Matrice de corrélation — Variables numériques')
+plt.tight_layout()
+save_figure('correlation_matrix.png')
+plt.show()
+
+# ============================================================
+# 11. Importance des variables  
+# ============================================================
+print("\n11. Importance des variables...")
+
 feature_importance = model.coef_[0]
 coef_df = pd.DataFrame(
     feature_importance,
@@ -149,9 +220,9 @@ coef_df = pd.DataFrame(
     columns=['Coefficients']
 ).sort_values(by='Coefficients', ascending=True)
 
-print("\n--- Top 5 variables augmentant le risque (coefficients positifs) ---")
+print("\n--- Variables augmentant le risque (coefficients positifs) ---")
 print(coef_df.tail(5))
-print("\n--- Top 5 variables réduisant le risque (coefficients négatifs) ---")
+print("\n--- Variables réduisant le risque (coefficients négatifs) ---")
 print(coef_df.head(5))
 
 plt.figure(figsize=(8, 4))
@@ -160,9 +231,45 @@ plt.axvline(x=0, color='black', linestyle='--', linewidth=0.8)
 plt.xlabel('Valeur du coefficient')
 plt.title('Importance des variables — Régression Logistique + RandomizedSearchCV')
 plt.tight_layout()
-plt.savefig('feature_importance.png')
+save_figure('feature_importance.png')
 plt.show()
 
+# ============================================================
+# 12. Courbe Précision-Rappel 
+# ============================================================
+print("\n12. Courbe Précision-Rappel...")
+
+precision, recall, pr_thresholds = precision_recall_curve(y_test, y_prob)
+avg_precision = average_precision_score(y_test, y_prob)
+print(f"Average Precision (PR-AUC) : {avg_precision:.4f}")
+
+plt.figure(figsize=(8, 6))
+plt.plot(recall, precision, color='blue', lw=2, label=f'PR Curve (AP = {avg_precision:.4f})')
+plt.fill_between(recall, precision, alpha=0.2, color='blue')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('Rappel (Recall)')
+plt.ylabel('Précision (Precision)')
+plt.title('Courbe Précision-Rappel — Régression Logistique + RandomizedSearchCV')
+plt.legend(loc='lower left')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+save_figure('precision_recall.png')
+plt.show()
+
+# ============================================================
+# 13. Résumé des métriques
+# ============================================================
 print("\n" + "=" * 60)
+print("RÉSUMÉ DES MÉTRIQUES")
+print("=" * 60)
+print(f"AUC                          : {area:.4f}")
+print(f"Coefficient de Gini          : {gini_coefficient:.4f}")
+print(f"KS Statistic                 : {ks_stat:.4f} ({ks_stat*100:.2f}%)")
+print(f"Average Precision (PR-AUC)   : {avg_precision:.4f}")
+print(f"Nombre de variables          : {len(X_train.columns)}")
+print(f"Variables les plus importantes : {coef_df.tail(3).index.tolist()}")
+print("\n" + "=" * 60)
+print(f"✅ Figures sauvegardées dans : {FIGURES_DIR}")
 print("ÉVALUATION TERMINÉE")
 print("=" * 60)
