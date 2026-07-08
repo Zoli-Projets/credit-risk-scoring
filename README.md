@@ -77,22 +77,22 @@ These datasets are merged to build the final modeling dataset.
 > **Note:** The `data/` folder is not intended to be version-controlled. Place the datasets manually in this directory before running the project.
 
 ---
-Methodology
+## Methodology
 
 The preprocessing pipeline includes:
 
-1. Data Preprocessing
-Currency conversion: All monetary values converted from INR to EUR
+### 1. Data Preprocessing
+**Currency conversion:** All monetary values converted from INR to EUR
 
-Missing value handling: Imputation of missing values
+**Missing value handling:** Imputation of missing values
 
-Duplicate removal: No duplicates found in the dataset
+**Duplicate removal**: No duplicates found in the dataset
 
-Outlier detection: Removal of unrealistic values (processing_fee > 3% of loan_amount)
+**Outlier detection:** Removal of unrealistic values (processing_fee > 3% of loan_amount)
 
-Business rules validation: GST ≤ 20% of loan_amount, net_disbursement ≤ loan_amount
+**Business rules validation:** GST ≤ 20% of loan_amount, net_disbursement ≤ loan_amount
 
-Categorical encoding: One-Hot Encoding of categorical variables
+**Categorical encoding:** One-Hot Encoding of categorical variables
 
 ### 2. Feature Engineering
 Engineered features include:
