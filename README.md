@@ -86,7 +86,7 @@ The preprocessing pipeline includes:
 
 **Missing value handling:** Imputation of missing values
 
-**Duplicate removal**: No duplicates found in the dataset
+**Duplicate removal:** No duplicates found in the dataset
 
 **Outlier detection:** Removal of unrealistic values (processing_fee > 3% of loan_amount)
 
@@ -103,26 +103,26 @@ Engineered features include:
 | **Delinquency Ratio** | `(delinquent_months / total_loan_months) × 100` | Proportion of time in delinquency |
 | **Average DPD** | `total_dpd / delinquent_months` | Intensity of payment delays |
  
-3. Feature Selection
-VIF (Variance Inflation Factor): Detection and removal of multicollinearity
+### 3. Feature Selection
+**VIF (Variance Inflation Factor):** Detection and removal of multicollinearity
 
-IV (Information Value): Selection of most predictive variables (IV > 0.02)
+**IV (Information Value):** Selection of most predictive variables (IV > 0.02)
 
-4. Modeling & Optimization
-Models tested: Logistic Regression, Random Forest, XGBoost
+### 4. Modeling & Optimization
+**Models tested:** Logistic Regression, Random Forest, XGBoost
 
-Optimization: RandomizedSearchCV and Optuna for hyperparameter tuning
+**Optimization:** RandomizedSearchCV and Optuna for hyperparameter tuning
 
-Imbalance handling: Random Under-Sampling and SMOTE Tomek
+**Imbalance handling:** Random Under-Sampling and SMOTE Tomek
 
-5. Evaluation
-AUC / ROC : Discrimination power
+### 5. Evaluation
+**AUC / ROC :** Discrimination power
 
-Gini Coefficient : Ranking ability
+**Gini Coefficient :** Ranking ability
 
-KS Statistic : Class separation
+**KS Statistic :** Class separation
 
-Rank Ordering : Risk segmentation
+**Rank Ordering :** Risk segmentation
 
 
 
