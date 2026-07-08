@@ -18,11 +18,15 @@ The project follows a complete machine learning workflow, including:
 
 ```text
 credit-risk-scoring/
-├── .gitignore
-├── setup.py
-├── pyproject.toml
+├──config
+│  └── config.yaml
+│
 ├── requirements.txt
-├── README.md
+│
+│── data/
+│    ├── loans.csv
+│    ├── customers.csv
+│    └── bureau.csv
 │
 ├── reports/
 │   └── Rapport_projet.pdf
@@ -48,10 +52,10 @@ credit-risk-scoring/
 │           ├── __init__.py
 │           └── train_model.py
 │
-└── data/
-    ├── loans.csv
-    ├── customers.csv
-    └── bureau.csv
+├── .gitignore
+├── pyproject.toml
+├── README.md
+└── setup.py    
 ```
 
 ---
@@ -73,25 +77,54 @@ These datasets are merged to build the final modeling dataset.
 > **Note:** The `data/` folder is not intended to be version-controlled. Place the datasets manually in this directory before running the project.
 
 ---
-
-## Features
+Methodology
 
 The preprocessing pipeline includes:
 
-* Missing value handling
-* Duplicate removal
-* Categorical encoding
-* Feature scaling
-* Feature engineering
-* Correlation analysis
-* Variable selection using Information Value (IV)
-* Multicollinearity analysis using VIF
+1. Data Preprocessing
+Currency conversion: All monetary values converted from INR to EUR
 
+Missing value handling: Imputation of missing values
+
+Duplicate removal: No duplicates found in the dataset
+
+Outlier detection: Removal of unrealistic values (processing_fee > 3% of loan_amount)
+
+Business rules validation: GST ≤ 20% of loan_amount, net_disbursement ≤ loan_amount
+
+Categorical encoding: One-Hot Encoding of categorical variables
+
+### 2. Feature Engineering
 Engineered features include:
 
-* Loan-to-Income Ratio
-* Delinquency Ratio
-* Average Days Past Due per Delinquency
+| Feature | Formula | Interpretation |
+|---------|---------|----------------|
+| **Loan-to-Income Ratio (LTI)** | `loan_amount / income` | Measures relative debt burden |
+| **Delinquency Ratio** | `(delinquent_months / total_loan_months) × 100` | Proportion of time in delinquency |
+| **Average DPD** | `total_dpd / delinquent_months` | Intensity of payment delays |
+ 
+3. Feature Selection
+VIF (Variance Inflation Factor): Detection and removal of multicollinearity
+
+IV (Information Value): Selection of most predictive variables (IV > 0.02)
+
+4. Modeling & Optimization
+Models tested: Logistic Regression, Random Forest, XGBoost
+
+Optimization: RandomizedSearchCV and Optuna for hyperparameter tuning
+
+Imbalance handling: Random Under-Sampling and SMOTE Tomek
+
+5. Evaluation
+AUC / ROC : Discrimination power
+
+Gini Coefficient : Ranking ability
+
+KS Statistic : Class separation
+
+Rank Ordering : Risk segmentation
+
+
 
 ---
 
@@ -125,6 +158,43 @@ Models are evaluated using:
 Special attention is given to **Recall** for the default class, as minimizing false negatives is crucial in credit risk prediction.
 
 ---
+
+### Final Model: Logistic Regression with RandomizedSearchCV
+
+| Métrique | Valeur |
+|----------|--------|
+| **AUC** | 0.9835 |
+| **Coefficient de Gini** | 0.9671 |
+| **KS Statistic** | 85.48% |
+| **Accuracy** | 96% |
+| **F1-score (classe défaut)** | 0.78 |
+| **Recall (classe défaut)** | 0.73 |
+
+---
+
+### Variable Importance (Top 5)
+
+| Variable | Coefficient | Impact |
+|----------|-------------|--------|
+| `loan_to_income` | 15.824 | ⬆️⬆️⬆️ Risque |
+| `credit_utilization_ratio` | 14.727 | ⬆️⬆️⬆️ Risque |
+| `delinquency_ratio` | 10.960 | ⬆️⬆️⬆️ Risque |
+| `avg_dpd_per_delinquency` | 2.072 | ⬆️⬆️ Risque |
+| `residence_type_Rented` | 1.604 | ⬆️ Risque |
+
+---
+
+### Decile Analysis
+
+| Décile | Taux d'Événements | Taux de Non-Événements | Cumul Événements |
+|--------|-------------------|------------------------|------------------|
+| 9 (risque élevé) | 71.92% | 28.08% | 83.70% |
+| 8 | 12.88% | 87.12% | 98.70% |
+| 7 | 0.72% | 99.28% | 99.53% |
+| 6 | 0.40% | 99.60% | 99.93% |
+| 5 à 0 | 0.00% | 100.00% | 100.00% |
+
+> ✅ **Interpretation:** The first two deciles concentrate nearly 99% of defaults, confirming the model's excellent risk segmentation capability.
 
 ## Installation
 
@@ -195,19 +265,23 @@ notebooks/notebook.ipynb
 ```
 
 ---
-
 ## Technologies
 
-* Python
-* Pandas
-* NumPy
-* Scikit-learn
-* XGBoost
-* LightGBM
-* CatBoost
-* Matplotlib
-* Seaborn
+### Langage et environnement
 
+- **Python 3.9+** : Langage principal du projet
+
+### Bibliothèques principales
+ 
+| Catégorie | Bibliothèques |
+|-----------|---------------|
+| **Data Processing** | Pandas, NumPy |
+| **Machine Learning** | Scikit-learn, XGBoost, LightGBM, CatBoost |
+| **Optimization** | Optuna |
+| **Visualization** | Matplotlib, Seaborn |
+| **Statistics** | Statsmodels |
+| **Model Persistence** | Joblib |
+| **Imbalance Handling** | Imbalanced-learn |
 ---
 
 ## Results
